@@ -6,8 +6,8 @@ import joblib
 # ========================
 # Load model dan encoder
 # ========================
-model_bulan = joblib.load('model_rf_bulan.pkl')
-model_tahun = joblib.load('model_rf_tahun.pkl')
+model_bulan = joblib.load('compress_model_rf_bulan.pkl')
+model_tahun = joblib.load('compress_model_rf_tahun.pkl')
 fitur_bulan = joblib.load('fitur_bulan.pkl')
 fitur_tahun = joblib.load('fitur_tahun.pkl')
 encoder_bulan = joblib.load('encoder_bulan.pkl')
@@ -16,7 +16,7 @@ encoder_tahun = joblib.load('encoder_tahun.pkl')
 # ========================
 # Load dataset asli
 # ========================
-sewa_df = pd.read_excel(r"C:\Users\grady\Downloads\sewa_df.xlsx")
+sewa_df = pd.read_excel("sewa_df.xlsx")
 sewa_df = sewa_df.dropna(subset=['city', 'apartment_name', 'agent_name'])
 
 # ========================
