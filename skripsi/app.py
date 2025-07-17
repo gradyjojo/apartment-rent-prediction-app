@@ -7,7 +7,7 @@ import joblib
 # Load model dan encoder
 # ========================
 model_bulan = joblib.load('skripsi/compress_model_rf_bulan.pkl')
-model_tahun = joblib.load('skripsi/compressmodel_rf_tahun.pkl')
+model_tahun = joblib.load('skripsi/compress_model_rf_tahun.pkl')
 fitur_bulan = joblib.load('skripsi/fitur_bulan.pkl')
 fitur_tahun = joblib.load('skripsi/fitur_tahun.pkl')
 encoder_bulan = joblib.load('skripsi/encoder_bulan.pkl')
