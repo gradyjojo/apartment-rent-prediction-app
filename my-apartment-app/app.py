@@ -6,8 +6,8 @@ import joblib
 # ========================
 # Load model dan encoder
 # ========================
-model_bulan = joblib.load('my-apartment-app/model_rf_bulan.pkl')
-model_tahun = joblib.load('my-apartment-app/model_rf_tahun.pkl')
+model_bulan = joblib.load('my-apartment-app/compress_model_rf_bulan.pkl')
+model_tahun = joblib.load('my-apartment-app/compress_model_rf_tahun.pkl')
 fitur_bulan = joblib.load('my-apartment-app/fitur_bulan.pkl')
 fitur_tahun = joblib.load('my-apartment-app/fitur_tahun.pkl')
 encoder_bulan = joblib.load('my-apartment-app/encoder_bulan.pkl')
