@@ -7,23 +7,19 @@ import joblib
 # Load model dan encoder
 # ========================
 model_bulan = joblib.load('skripsi/compress_model_rf_bulan.pkl')
-model_tahun = joblib.load('skripsi/compress_model_rf_tahun.pkl')
+model_tahun = joblib.load('skripsi/compressmodel_rf_tahun.pkl')
 fitur_bulan = joblib.load('skripsi/fitur_bulan.pkl')
 fitur_tahun = joblib.load('skripsi/fitur_tahun.pkl')
 encoder_bulan = joblib.load('skripsi/encoder_bulan.pkl')
 encoder_tahun = joblib.load('skripsi/encoder_tahun.pkl')
+scaler_bulan = joblib.load('skripsi/scaler_bulan.pkl')
+scaler_tahun = joblib.load('skripsi/scaler_tahun.pkl')
 
 # ========================
 # Load dataset asli
 # ========================
-sewa_df = pd.read_excel("skripsi/sewa_df.xlsx")
-sewa_df = sewa_df.dropna(subset=['city', 'apartment_name', 'agent_name'])
-
-# ========================
-# Ekstrak nilai unik
-# ========================
-list_kota = sorted(sewa_df['city'].unique())
-list_condition = sorted(sewa_df['condition'].dropna().unique())
+data_bulan = pd.read_excel("skripsi/data_bulan.xlsx")
+data_tahun = pd.read_excel("skripsi/data_tahun.xlsx")
 
 # ========================
 # Streamlit UI
@@ -31,12 +27,13 @@ list_condition = sorted(sewa_df['condition'].dropna().unique())
 st.title("Prediksi Harga Sewa Apartemen")
 
 periode = st.selectbox("Pilih Periode Sewa:", ["Per Bulan", "Per Tahun"])
-city = st.selectbox("Kota:", list_kota)
+sewa_df = data_bulan if periode == "Per Bulan" else data_tahun
+sewa_df = sewa_df.dropna(subset=['city', 'apartment_name', 'agent_name'])
 
-# Filter data sesuai kota
-filtered_df = sewa_df[sewa_df['city'] == city]
+list_kota = sorted(sewa_df['city'].unique())
+list_condition = sorted(sewa_df['condition'].dropna().unique())
 
-# Inisialisasi Session State
+# Inisialisasi session state
 if 'apartemen' not in st.session_state:
     st.session_state.apartemen = "(Kosongkan jika tidak ada)"
 if 'agen' not in st.session_state:
@@ -45,8 +42,24 @@ if 'apartemen_changed' not in st.session_state:
     st.session_state.apartemen_changed = False
 if 'agen_changed' not in st.session_state:
     st.session_state.agen_changed = False
+if 'last_city' not in st.session_state:
+    st.session_state.last_city = None
 
-# Fungsi update flag perubahan
+# Selectbox kota
+city = st.selectbox("Kota:", list_kota)
+
+# Reset jika kota berubah
+if st.session_state.last_city != city:
+    st.session_state.apartemen = "(Kosongkan jika tidak ada)"
+    st.session_state.agen = "(Kosongkan jika tidak ada)"
+    st.session_state.apartemen_changed = False
+    st.session_state.agen_changed = False
+    st.session_state.last_city = city
+
+# Filter data berdasarkan kota
+filtered_df = sewa_df[sewa_df['city'] == city]
+
+# Fungsi update perubahan
 def update_apartemen():
     st.session_state.apartemen_changed = True
     st.session_state.agen_changed = False
@@ -55,7 +68,7 @@ def update_agen():
     st.session_state.agen_changed = True
     st.session_state.apartemen_changed = False
 
-# Fungsi untuk generate list berdasarkan perubahan terakhir
+# Fungsi buat list apartemen & agen
 def get_apt_agen_lists():
     apt_selected = st.session_state.apartemen
     agen_selected = st.session_state.agen
@@ -77,7 +90,6 @@ def get_apt_agen_lists():
         apt_list = sorted(filtered['apartment_name'].unique())
         agen_list = sorted(filtered['agent_name'].unique())
 
-    # Tambahkan nilai saat ini jika tidak ada dalam list
     if apt_selected not in apt_list:
         apt_list.append(apt_selected)
     if agen_selected not in agen_list:
@@ -88,10 +100,10 @@ def get_apt_agen_lists():
 
     return apt_list, agen_list
 
-# Ambil list dinamis
+# Dapatkan list apartemen & agen
 apt_list, agen_list = get_apt_agen_lists()
 
-# Selectbox dengan on_change trigger
+# Input apartemen dan agen
 st.selectbox(
     "Nama Apartemen (opsional):",
     apt_list,
@@ -108,61 +120,81 @@ st.selectbox(
     on_change=update_agen
 )
 
-
-# Input lainnya
-bedroom = st.number_input("Jumlah Kamar Tidur", min_value=0, value=2)
-bathroom = st.number_input("Jumlah Kamar Mandi", min_value=0, value=1)
-building_size = st.number_input("Luas Bangunan (m²)", min_value=0.0, value=40.0)
+# Input numerik & kondisi
+bedroom_count = st.number_input("Jumlah Kamar Tidur", min_value=1, value=1)
+bathroom_count = st.number_input("Jumlah Kamar Mandi", min_value=1, value=1)
+building_size = st.number_input("Luas Bangunan (m²)", min_value=15.0, value=25.0)
+facility_count = st.number_input("Jumlah Fasilitas", min_value=0, max_value=20, value=0)
 condition = st.selectbox("Furnish:", list_condition)
 
 # ========================
 # Prediksi
 # ========================
 if st.button("Prediksi Harga Sewa"):
-    input_data = {
-        'bedroom_count': bedroom,
-        'bathroom_count': bathroom,
+    model = model_bulan if periode == "Per Bulan" else model_tahun
+    fitur = fitur_bulan if periode == "Per Bulan" else fitur_tahun
+    scaler = scaler_bulan if periode == "Per Bulan" else scaler_tahun
+    encoder = encoder_bulan if periode == "Per Bulan" else encoder_tahun
+
+    # Input numerik
+    input_numerik = {
+        'bedroom_count': bedroom_count,
+        'bathroom_count': bathroom_count,
         'building_size': building_size,
+        'facility_count': facility_count,
     }
 
-    # One-hot encoding
-    for c in list_kota:
-        input_data[f'city_{c}'] = 1 if c == city else 0
-    for cond in list_condition:
-        input_data[f'condition_{cond}'] = 1 if cond == condition else 0
+    num_df = pd.DataFrame([input_numerik])
+    num_df = num_df[scaler.feature_names_in_]  # pastikan urutan sama
+    num_scaled = scaler.transform(num_df)
+    num_scaled_df = pd.DataFrame(num_scaled, columns=num_df.columns)
 
-    # Target Encoding (kondisional)
-    encoder = encoder_bulan if periode == "Per Bulan" else encoder_tahun
+    # One-hot encoding kota & kondisi
+    onehot_data = {}
+    for c in list_kota:
+        onehot_data[f'city_{c}'] = 1 if c == city else 0
+    for cond in list_condition:
+        onehot_data[f'condition_{cond}'] = 1 if cond == condition else 0
+
+    # Target encoding
     apartemen_val = st.session_state.apartemen if not st.session_state.apartemen.startswith("(Kosongkan") else None
     agen_val = st.session_state.agen if not st.session_state.agen.startswith("(Kosongkan") else None
 
     if apartemen_val or agen_val:
         encode_df = pd.DataFrame([{
-            'apartment_name': apartemen_val if apartemen_val else None,
-            'agent_name': agen_val if agen_val else None
+            'apartment_name': apartemen_val,
+            'agent_name': agen_val
         }])
         encoded = encoder.transform(encode_df)
-        input_data['apartment_name'] = encoded['apartment_name'].values[0]
-        input_data['agent_name'] = encoded['agent_name'].values[0]
+        target_enc_data = {
+            'apartment_name': encoded['apartment_name'].values[0],
+            'agent_name': encoded['agent_name'].values[0]
+        }
     else:
-        input_data['apartment_name'] = 0
-        input_data['agent_name'] = 0
+        target_enc_data = {
+            'apartment_name': 0,
+            'agent_name': 0
+        }
 
-    df = pd.DataFrame([input_data])
+    # Gabungkan semua fitur
+    final_input = pd.concat([
+        num_scaled_df,
+        pd.DataFrame([onehot_data]),
+        pd.DataFrame([target_enc_data])
+    ], axis=1)
 
-    model = model_bulan if periode == "Per Bulan" else model_tahun
-    fitur = fitur_bulan if periode == "Per Bulan" else fitur_tahun
-
+    # Tambah kolom kosong jika perlu
     for col in fitur:
-        if col not in df.columns:
-            df[col] = 0
-    df = df[fitur]
+        if col not in final_input.columns:
+            final_input[col] = 0
 
-    prediksi = model.predict(df)[0]
+    final_input = final_input[fitur]  # pastikan urutan fitur sesuai
+
+    # Prediksi
+    prediksi = model.predict(final_input)[0]
 
     # Output
-    st.success("Perkiraan Harga Sewa:")
-    st.write(f"Kota: {city}")
+    st.success(f"Perkiraan Harga Sewa di {city}:")
     if apartemen_val:
         st.write(f"Apartemen: {apartemen_val}")
     if agen_val:
