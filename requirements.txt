@@ -1,7 +1,0 @@
-streamlit
-pandas
-numpy
-scikit-learn==1.7.0
-joblib==1.5.1
-category_encoders
-openpyxl
