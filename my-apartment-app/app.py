@@ -6,20 +6,20 @@ import joblib
 # ========================
 # Load model dan encoder
 # ========================
-model_bulan = joblib.load('model_rf_bulan.pkl')
-model_tahun = joblib.load('model_rf_tahun.pkl')
-fitur_bulan = joblib.load('fitur_bulan.pkl')
-fitur_tahun = joblib.load('fitur_tahun.pkl')
-encoder_bulan = joblib.load('encoder_bulan.pkl')
-encoder_tahun = joblib.load('encoder_tahun.pkl')
-scaler_bulan = joblib.load('scaler_bulan.pkl')
-scaler_tahun = joblib.load('scaler_tahun.pkl')
+model_bulan = joblib.load('skripsi/my-apartment-app/compress_model_rf_bulan.pkl')
+model_tahun = joblib.load('skripsi/my-apartment-app/compress_model_rf_tahun.pkl')
+fitur_bulan = joblib.load('skripsi/my-apartment-app/fitur_bulan.pkl')
+fitur_tahun = joblib.load('skripsi/my-apartment-app/fitur_tahun.pkl')
+encoder_bulan = joblib.load('skripsi/my-apartment-app/encoder_bulan.pkl')
+encoder_tahun = joblib.load('skripsi/my-apartment-app/encoder_tahun.pkl')
+scaler_bulan = joblib.load('skripsi/my-apartment-app/scaler_bulan.pkl')
+scaler_tahun = joblib.load('skripsi/my-apartment-app/scaler_tahun.pkl')
 
 # ========================
 # Load dataset asli
 # ========================
-data_bulan = pd.read_excel("data_bulan.xlsx")
-data_tahun = pd.read_excel("data_tahun.xlsx")
+data_bulan = pd.read_excel("skripsi/my-apartment-app/data_bulan.xlsx")
+data_tahun = pd.read_excel("skripsi/my-apartment-app/data_tahun.xlsx")
 
 # ========================
 # Streamlit UI
