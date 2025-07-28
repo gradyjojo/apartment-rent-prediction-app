@@ -125,7 +125,7 @@ bedroom_count = st.number_input("Jumlah Kamar Tidur", min_value=1, value=1)
 bathroom_count = st.number_input("Jumlah Kamar Mandi", min_value=1, value=1)
 building_size = st.number_input("Luas Bangunan (m²)", min_value=15.0, value=25.0)
 facility_count = st.number_input("Jumlah Fasilitas", min_value=0, max_value=20, value=0)
-condition = st.selectbox("Furnish:", list_condition)
+condition = st.selectbox("Kondisi:", list_condition)
 
 # ========================
 # Prediksi
